@@ -1,0 +1,1147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cabe no Dia</title>
+<meta name="description" content="Agenda pessoal pensada para TDAH: tudo do dia numa tela só.">
+<meta name="theme-color" content="#2F4BD6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12151C" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Cabe no Dia">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Lexend:wght@400;500;600&display=swap">
+<style>
+/* Layout: coluna única de celular — topo com data e barra de progresso,
+   campo de anotar + abas fixos, lista de tarefas abaixo. */
+:root {
+  --bg: #F2F4F8;
+  --surface: #FFFFFF;
+  --surface-2: #E9EDF4;
+  --ink: #1A2130;
+  --muted: #5D6677;
+  --line: #DDE2EA;
+  --brand: #2F4BD6;
+  --brand-ink: #FFFFFF;
+  --done: #1E9E5E;
+  --done-soft: #D6F2E3;
+  --late: #D9681F;
+  --late-soft: #FCE9DA;
+  --danger: #C8362B;
+
+  --a-medicina: #0E8F84;
+  --a-biblia: #B57A0C;
+  --a-conteudo: #D03E73;
+  --a-viagem: #2A7FD4;
+  --a-lazer: #7A50D0;
+  --a-mensagens: #4A63A8;
+  --a-geral: #687286;
+
+  --f-display: "Bricolage Grotesque", "Lexend", system-ui, sans-serif;
+  --f-body: "Lexend", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --r: 16px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11141B;
+    --surface: #1A1F29;
+    --surface-2: #232A36;
+    --ink: #E8ECF3;
+    --muted: #9AA3B4;
+    --line: #2B323E;
+    --brand: #7C8EFF;
+    --brand-ink: #0E1220;
+    --done: #3DCB84;
+    --done-soft: #183A2A;
+    --late: #F2955A;
+    --late-soft: #3A2618;
+    --danger: #F07167;
+
+    --a-medicina: #34C7B8;
+    --a-biblia: #E5B547;
+    --a-conteudo: #F27AA6;
+    --a-viagem: #63AEF7;
+    --a-lazer: #AE8CF5;
+    --a-mensagens: #8FA3E8;
+    --a-geral: #9AA3B4;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100dvh;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 10px; }
+[hidden] { display: none !important; }
+
+.wrap {
+  max-width: 600px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- Topo ---------- */
+.top {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 18px);
+  padding-bottom: 6px;
+  display: grid;
+  gap: 14px;
+}
+.top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.eyebrow { font-size: 14px; color: var(--muted); letter-spacing: .02em; }
+h1 {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(28px, 7.5vw, 36px);
+  line-height: 1.05;
+  margin: 2px 0 0;
+  text-wrap: balance;
+}
+.icon-btn {
+  flex: none;
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  display: grid; place-items: center;
+}
+.icon-btn svg { width: 22px; height: 22px; }
+
+.progress { display: grid; gap: 8px; }
+.progress-track {
+  height: 14px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 99px;
+  background: var(--done);
+  transition: width .6s cubic-bezier(.2,.8,.2,1);
+  position: relative;
+}
+.progress-fill::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  transform: translateX(-100%);
+}
+.progress-fill.shine::after { animation: shine .9s ease-out; }
+@keyframes shine { to { transform: translateX(100%); } }
+.progress-text { display: flex; justify-content: space-between; font-size: 15px; color: var(--muted); }
+.progress-text strong { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------- Campo + abas (fixos) ---------- */
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+  margin-top: -8px;
+}
+.add {
+  display: flex;
+  gap: 8px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  padding: 6px 6px 6px 16px;
+  transition: border-color .15s;
+}
+.add:focus-within { border-color: var(--brand); }
+.add input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  font-size: 17px;
+  padding: 8px 0;
+}
+.add input::placeholder { color: var(--muted); }
+.add button {
+  flex: none;
+  border: 0;
+  border-radius: 13px;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 600;
+  padding: 0 18px;
+  min-height: 46px;
+}
+.preview {
+  min-height: 30px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 6px 4px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c, var(--a-geral)); flex: none; }
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 8px 0 12px;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  scroll-padding-inline: 16px;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  border-radius: 99px;
+  padding: 9px 14px;
+  font-size: 15px;
+  font-weight: 500;
+  min-height: 44px;
+}
+.tab[aria-selected="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+.tab .count {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-2);
+  color: var(--muted);
+  border-radius: 99px;
+  padding: 1px 7px;
+  min-width: 22px;
+  text-align: center;
+}
+.tab[aria-selected="true"] .count { background: rgba(127,127,127,.3); color: inherit; }
+.tab .count.late { background: var(--late); color: #fff; }
+
+/* ---------- Lista ---------- */
+main { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 48px); display: grid; gap: 22px; }
+.banner {
+  background: var(--surface);
+  border: 1.5px dashed var(--line);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  font-size: 14.5px;
+  color: var(--muted);
+  display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+}
+.banner.warn { border-color: var(--late); color: var(--ink); }
+.link-btn {
+  border: 0; background: none; padding: 6px 2px;
+  color: var(--brand); font-weight: 600; font-size: 14.5px;
+}
+.section { display: grid; gap: 8px; }
+.section-title {
+  display: flex; align-items: baseline; justify-content: space-between;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0 4px;
+}
+.section-title.late { color: var(--late); }
+.section-title .hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 10px 8px 10px 10px;
+  border: 1px solid var(--line);
+  position: relative;
+  transition: opacity .3s, transform .3s;
+}
+.task.late { background: var(--late-soft); border-color: transparent; }
+.task.is-done { background: transparent; border-style: dashed; }
+.task.is-done .t-title { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--muted); }
+.task.leaving { opacity: .55; transform: scale(.98); }
+
+.check {
+  flex: none;
+  width: 44px; height: 44px;
+  border: 0; background: none; padding: 0;
+  display: grid; place-items: center;
+}
+.check span {
+  width: 28px; height: 28px;
+  border-radius: 10px;
+  border: 2.5px solid var(--c, var(--muted));
+  display: grid; place-items: center;
+  transition: background .2s, transform .2s;
+}
+.check svg { width: 18px; height: 18px; stroke: #fff; opacity: 0; transform: scale(.4); transition: all .25s cubic-bezier(.3,1.6,.5,1); }
+.task.is-done .check span { background: var(--done); border-color: var(--done); }
+.task.is-done .check svg { opacity: 1; transform: scale(1); }
+.check:active span { transform: scale(.88); }
+
+.t-body {
+  flex: 1; min-width: 0;
+  border: 0; background: none; padding: 4px 0; text-align: left;
+  display: grid; gap: 4px;
+}
+.t-title { font-size: 17px; font-weight: 500; overflow-wrap: anywhere; }
+.t-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13.5px; color: var(--muted); }
+.t-meta .when.late { color: var(--late); font-weight: 600; }
+.t-meta .tag { display: inline-flex; align-items: center; gap: 5px; }
+
+.move {
+  flex: none;
+  border: 0; background: var(--surface-2);
+  border-radius: 12px;
+  min-width: 44px; height: 40px;
+  padding: 0 10px;
+  font-size: 13px; font-weight: 600;
+  color: var(--muted);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.move svg { width: 16px; height: 16px; }
+
+.empty {
+  text-align: center;
+  padding: 28px 16px;
+  color: var(--muted);
+  font-size: 15.5px;
+  border-radius: var(--r);
+  border: 1.5px dashed var(--line);
+}
+.empty strong { display: block; color: var(--ink); font-size: 17px; margin-bottom: 4px; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  transform: translate(-50%, 140%);
+  width: min(560px, calc(100% - 32px));
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 16px;
+  padding: 12px 12px 12px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-size: 15px;
+  z-index: 30;
+  transition: transform .35s cubic-bezier(.2,.9,.3,1.2), opacity .2s, visibility 0s .35s;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  opacity: 0;
+  visibility: hidden;
+}
+.toast.show { transform: translate(-50%, 0); opacity: 1; visibility: visible; transition: transform .35s cubic-bezier(.2,.9,.3,1.2), opacity .2s; }
+.toast button {
+  border: 0; background: rgba(127,127,127,.28); color: inherit;
+  border-radius: 10px; padding: 8px 12px; font-weight: 600; font-size: 14px; flex: none;
+}
+
+/* ---------- Folha (editar / ajustes) ---------- */
+dialog {
+  border: 0;
+  padding: 0;
+  margin: auto auto 0;
+  width: 100%;
+  max-width: 600px;
+  max-height: 92dvh;
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 24px 24px 0 0;
+}
+dialog::backdrop { background: rgba(10,12,18,.5); }
+dialog[open] { animation: up .28s cubic-bezier(.2,.9,.3,1); }
+@keyframes up { from { transform: translateY(40px); opacity: .4; } }
+.sheet {
+  padding: 10px max(20px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 20px) max(20px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 18px;
+}
+.grab { width: 44px; height: 5px; border-radius: 9px; background: var(--line); margin: 0 auto; }
+.sheet h2 { font-family: var(--f-display); font-size: 24px; margin: 0; }
+.field { display: grid; gap: 8px; }
+.field > label, .field > .lbl { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; color: var(--muted); }
+.text-in {
+  width: 100%;
+  border: 2px solid var(--line);
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 17px;
+}
+.text-in:focus { outline: none; border-color: var(--brand); }
+.pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.pick button {
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  border-radius: 99px;
+  padding: 9px 14px;
+  min-height: 44px;
+  font-size: 15px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.pick button[aria-pressed="true"] { border-color: var(--c, var(--brand)); background: var(--surface-2); font-weight: 600; box-shadow: inset 0 0 0 1.5px var(--c, var(--brand)); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn {
+  border: 0;
+  border-radius: 14px;
+  min-height: 50px;
+  padding: 0 18px;
+  font-weight: 600;
+  font-size: 16px;
+  background: var(--surface-2);
+}
+.btn.primary { background: var(--brand); color: var(--brand-ink); flex: 1; }
+.btn.danger { background: transparent; color: var(--danger); border: 1.5px solid currentColor; }
+.btn.danger.armed { background: var(--danger); color: #fff; border-color: var(--danger); }
+.settings-list { display: grid; gap: 10px; }
+.settings-list .btn { width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; }
+.note { font-size: 14px; color: var(--muted); margin: 0; }
+
+canvas#fx { position: fixed; inset: 0; pointer-events: none; z-index: 40; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="top-row">
+      <div>
+        <div class="eyebrow" id="greet">Bom dia</div>
+        <h1 id="today-title">Hoje</h1>
+      </div>
+      <button class="icon-btn" id="open-settings" aria-label="Ajustes e backup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+    <div class="progress" aria-live="polite">
+      <div class="progress-track" role="progressbar" aria-label="Progresso do dia" aria-valuemin="0" aria-valuemax="100" id="pbar">
+        <div class="progress-fill" id="pfill"></div>
+      </div>
+      <div class="progress-text"><span id="ptext">Nada para hoje ainda</span><strong id="ppct">0%</strong></div>
+    </div>
+  </header>
+
+  <div class="sticky">
+    <form class="add" id="add-form" autocomplete="off">
+      <input id="add-input" type="text" enterkeyhint="done" placeholder="Ex.: postar vlog TikTok hoje" aria-label="Nova tarefa">
+      <button type="submit">Anotar</button>
+    </form>
+    <div class="preview" id="preview" aria-live="polite"><span>Escreva do seu jeito. Eu descubro a área e o dia.</span></div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Áreas"></nav>
+  </div>
+
+  <main id="list"></main>
+</div>
+
+<div class="toast" id="toast" role="status"><span id="toast-text"></span><button id="toast-btn" hidden>Desfazer</button></div>
+
+<dialog id="edit-dlg" aria-label="Editar tarefa">
+  <form class="sheet" id="edit-form" method="dialog">
+    <div class="grab"></div>
+    <h2>Editar tarefa</h2>
+    <div class="field">
+      <label for="e-title">O que é</label>
+      <input class="text-in" id="e-title" type="text" required>
+    </div>
+    <div class="field">
+      <span class="lbl">Área</span>
+      <div class="pick" id="e-areas"></div>
+    </div>
+    <div class="field">
+      <span class="lbl">Quando</span>
+      <div class="pick" id="e-quick">
+        <button type="button" data-q="today">Hoje</button>
+        <button type="button" data-q="tomorrow">Amanhã</button>
+        <button type="button" data-q="none">Algum dia</button>
+      </div>
+      <div class="row2">
+        <input class="text-in" id="e-date" type="date" aria-label="Data">
+        <input class="text-in" id="e-time" type="time" aria-label="Horário">
+      </div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn danger" id="e-delete">Apagar</button>
+      <button type="button" class="btn" id="e-cancel">Cancelar</button>
+      <button type="submit" class="btn primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="set-dlg" aria-label="Ajustes">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Ajustes</h2>
+    <div class="settings-list">
+      <button class="btn primary" id="s-install" hidden>Instalar na tela inicial</button>
+      <p class="note" id="s-ios" hidden>No iPhone: abra no Safari, toque em Compartilhar e escolha “Adicionar à Tela de Início”.</p>
+      <button class="btn" id="s-export">Baixar backup <span aria-hidden="true">↓</span></button>
+      <button class="btn" id="s-import">Restaurar backup <span aria-hidden="true">↑</span></button>
+      <input type="file" id="s-file" accept="application/json,.json" hidden>
+      <button class="btn" id="s-clear-done">Limpar tarefas feitas</button>
+      <button class="btn" id="s-clear-ex" hidden>Apagar tarefas de exemplo</button>
+    </div>
+    <p class="note">Suas tarefas ficam guardadas neste aparelho. Baixe um backup de vez em quando para não perder nada se trocar de celular.</p>
+    <div class="actions"><button class="btn primary" id="s-close">Fechar</button></div>
+  </div>
+</dialog>
+
+<canvas id="fx"></canvas>
+
+<script>
+(() => {
+"use strict";
+
+/* ================= Áreas ================= */
+const AREAS = [
+  { id: "medicina",  nome: "Medicina" },
+  { id: "biblia",    nome: "Bíblia" },
+  { id: "conteudo",  nome: "Conteúdo" },
+  { id: "viagem",    nome: "Viagem" },
+  { id: "lazer",     nome: "Lazer" },
+  { id: "mensagens", nome: "Mensagens" },
+  { id: "geral",     nome: "Geral" },
+];
+const AREA = Object.fromEntries(AREAS.map(a => [a.id, a]));
+const color = id => `var(--a-${id})`;
+
+const KEYWORDS = {
+  medicina: ["prova", "plantao", "ambulatorio", "internato", "estagio", "aula", "residencia", "paciente", "hospital",
+    "estudar", "estudo", "revisar", "revisao", "simulado", "pediatria", "cirurgia", "clinica", "gineco", "obstetric",
+    "preceptor", "artigo", "tcc", "enfermaria", "evolucao", "anatomia", "farmaco", "questoes", "caso clinico", "medicina",
+    "ubs", "psf", "rodizio", "seminario", "monitoria", "osce"],
+  biblia: ["biblia", "versiculo", "devocional", "culto", "igreja", "oracao", "orar", "salmo", "evangelho", "celula",
+    "louvor", "jejum", "proverbios", "genesis", "pregacao", "estudo biblico", "ministerio"],
+  conteudo: ["tiktok", "vlog", "reel", "insta", "youtube", "postar", "post", "gravar", "grava", "editar", "edicao",
+    "video", "story", "stories", "roteiro", "conteudo", "legenda", "live", "thumb", "publi", "collab", "trend", "feed"],
+  viagem: ["viagem", "viajar", "passagem", "voo", "hotel", "airbnb", "mala", "passaporte", "aeroporto", "hospedagem",
+    "check-in", "checkin", "visto", "seguro viagem", "rodoviaria", "onibus para"],
+  lazer: ["cinema", "filme", "serie", "praia", "festa", "show", "jantar", "barzinho", "passeio", "aniversario", "role",
+    "encontro", "massagem", "descansar", "museu", "trilha", "piquenique", "happy hour", "ler livro"],
+  mensagens: ["responder", "resposta", "mensagem", "msg", "ligar", "whatsapp", "zap", "email", "e-mail", "retornar",
+    "mandar", "avisar", "dm", "direct", "agradecer", "perguntar", "cobrar"],
+};
+
+/* ================= Datas ================= */
+const pad = n => String(n).padStart(2, "0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromIso = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const startToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const todayIso = () => iso(startToday());
+const tomorrowIso = () => iso(addDays(startToday(), 1));
+const WD = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+const WD_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const WD_LONG = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+const MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+
+function dayDiff(dIso) { return Math.round((fromIso(dIso) - startToday()) / 86400000); }
+function whenLabel(t) {
+  if (!t.date) return t.time ? t.time : "";
+  const diff = dayDiff(t.date);
+  const d = fromIso(t.date);
+  let s;
+  if (diff === 0) s = "Hoje";
+  else if (diff === 1) s = "Amanhã";
+  else if (diff === -1) s = "Ontem";
+  else if (diff > 1 && diff < 7) s = WD_SHORT[d.getDay()];
+  else s = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+  if (diff > 1 && diff < 7) s += ` ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+  return t.time ? `${s} · ${t.time}` : s;
+}
+
+/* ================= Leitura do texto ================= */
+// Troca acentos mantendo o mesmo tamanho, para poder recortar do texto original.
+const FOLD = { "á":"a","à":"a","â":"a","ã":"a","ä":"a","é":"e","ê":"e","è":"e","ë":"e","í":"i","ì":"i","î":"i","ï":"i",
+  "ó":"o","ò":"o","ô":"o","õ":"o","ö":"o","ú":"u","ù":"u","û":"u","ü":"u","ç":"c","ñ":"n" };
+const fold = s => s.toLowerCase().replace(/[^\u0000-\u007f]/g, c => FOLD[c] || c);
+
+function parse(raw) {
+  const original = raw.replace(/\s+/g, " ").trim();
+  let f = fold(original);
+  const cut = []; // trechos [ini, fim) a remover do título
+  let date = null, time = null, area = null;
+  const today = startToday();
+
+  const take = (re, fn) => {
+    const m = re.exec(f);
+    if (!m) return false;
+    const lead = m[1] ? m[1].length : 0; // espaço inicial capturado
+    const ok = fn(m);
+    if (ok === false) return false;
+    cut.push([m.index + lead, m.index + m[0].length]);
+    f = f.slice(0, m.index + lead) + " ".repeat(m[0].length - lead) + f.slice(m.index + m[0].length);
+    return true;
+  };
+
+  // #area explícita
+  take(/(^|\s)#([a-z]+)/, m => {
+    const k = m[2];
+    const hit = AREAS.find(a => fold(a.nome).startsWith(k) || a.id.startsWith(k));
+    if (!hit) return false;
+    area = hit.id;
+  });
+
+  // horário: 14h, 14h30, 14:30, às 9h
+  take(/(^|\s)(?:as\s+|a\s+partir\s+das\s+)?(\d{1,2})(?:h(\d{2})?|:(\d{2}))(?:min)?(?=\s|$|[,.!])(?!\s+de\s)/, m => {
+    const h = +m[2], mi = +(m[3] || m[4] || 0);
+    if (h > 23 || mi > 59) return false;
+    time = `${pad(h)}:${pad(mi)}`;
+  });
+
+  // data dd/mm(/aaaa)
+  if (!date) take(/(^|\s)(?:no\s+dia\s+|dia\s+|em\s+|para\s+|pra\s+)?(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=\s|$|[,.!])/, m => {
+    const d = +m[2], mo = +m[3];
+    if (d < 1 || d > 31 || mo < 1 || mo > 12) return false;
+    let y = m[4] ? +m[4] : today.getFullYear();
+    if (y < 100) y += 2000;
+    let dt = new Date(y, mo - 1, d);
+    if (!m[4] && dt < today) dt = new Date(y + 1, mo - 1, d);
+    date = iso(dt);
+  });
+
+  // depois de amanhã / amanhã / hoje
+  if (!date) take(/(^|\s)(?:para\s+|pra\s+)?depois\s+de\s+amanha(?=\s|$|[,.!])/, () => { date = iso(addDays(today, 2)); });
+  if (!date) take(/(^|\s)(?:para\s+|pra\s+|de\s+)?amanha(?=\s|$|[,.!])/, () => { date = iso(addDays(today, 1)); });
+  if (!date) take(/(^|\s)(?:para\s+|pra\s+|ainda\s+)?(?:hoje|hj)(?=\s|$|[,.!])/, () => { date = iso(today); });
+
+  // fim de semana / semana que vem
+  if (!date) take(/(^|\s)(?:no\s+|neste\s+|nesse\s+|esse\s+|este\s+)?(?:fim\s+de\s+semana|fds)(?=\s|$|[,.!])/, () => {
+    const add = (6 - today.getDay() + 7) % 7; date = iso(addDays(today, add));
+  });
+  if (!date) take(/(^|\s)(?:na\s+)?(?:semana\s+que\s+vem|proxima\s+semana)(?=\s|$|[,.!])/, () => {
+    const add = ((1 - today.getDay() + 7) % 7) || 7; date = iso(addDays(today, add));
+  });
+
+  // dias da semana
+  if (!date) take(/(^|\s)(?:na\s+|no\s+|nesta\s+|neste\s+|nessa\s+|nesse\s+|essa\s+|esse\s+|esta\s+|este\s+|(proxima|proximo)\s+|ate\s+(?:a\s+|o\s+)?)?(segunda|terca|quarta|quinta|sexta|sabado|domingo)(?:[-\s]feira)?(?=\s|$|[,.!])/, m => {
+    const target = WD.indexOf(m[3]);
+    let add = (target - today.getDay() + 7) % 7;
+    if (m[2]) add = add === 0 ? 7 : add;
+    date = iso(addDays(today, add));
+  });
+
+  // dia 15
+  if (!date) take(/(^|\s)(?:no\s+)?dia\s+(\d{1,2})(?=\s|$|[,.!])/, m => {
+    const d = +m[2];
+    if (d < 1 || d > 31) return false;
+    let dt = new Date(today.getFullYear(), today.getMonth(), d);
+    if (dt < today) dt = new Date(today.getFullYear(), today.getMonth() + 1, d);
+    date = iso(dt);
+  });
+
+  // título = original sem os trechos reconhecidos
+  let title = original;
+  cut.sort((a, b) => b[0] - a[0]).forEach(([a, b]) => { title = title.slice(0, a) + " " + title.slice(b); });
+  title = title.replace(/\s+/g, " ").trim()
+    .replace(/[\s,.;-]+$/g, "")
+    .replace(/\s+(na|no|para|pra|as|às|dia|de|em|até|ate)$/i, "")
+    .trim();
+  if (!title) title = original;
+  title = title.charAt(0).toUpperCase() + title.slice(1);
+
+  // área por palavras-chave
+  let sure = true;
+  if (!area) {
+    const ft = " " + fold(title) + " ";
+    const scores = {};
+    for (const [id, words] of Object.entries(KEYWORDS)) {
+      for (const w of words) {
+        const re = new RegExp("[^a-z0-9]" + w.replace(/[-]/g, "\\-"));
+        if (re.test(ft)) scores[id] = (scores[id] || 0) + 1;
+      }
+    }
+    const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    if (ranked.length && (ranked.length === 1 || ranked[0][1] > ranked[1][1])) area = ranked[0][0];
+    else { area = "geral"; sure = false; }
+  }
+  return { title, area, date, time, sure };
+}
+
+/* ================= Estado ================= */
+const KEY = "cabe-no-dia.v1";
+let state = { tasks: [], tab: "hoje" };
+let storageOk = true;
+let undoSnap = null;
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.tasks)) state.tasks = data.tasks;
+      if (data.tab) state.tab = data.tab;
+      return true;
+    }
+  } catch (e) { storageOk = false; }
+  return false;
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify({ tasks: state.tasks, tab: state.tab, v: 1 })); storageOk = true; }
+  catch (e) { storageOk = false; }
+}
+function snapshot() { undoSnap = JSON.stringify(state.tasks); }
+function undo() {
+  if (!undoSnap) return;
+  state.tasks = JSON.parse(undoSnap); undoSnap = null;
+  save(); render(); toast("Desfeito");
+}
+
+function seed() {
+  const t = startToday();
+  const d = n => iso(addDays(t, n));
+  const ex = (title, area, date, time, done) => ({
+    id: uid(), title, area, date, time: time || null, done: !!done, doneOn: done ? iso(t) : null,
+    created: Date.now(), example: true,
+  });
+  state.tasks = [
+    ex("Leitura de Salmos 23", "biblia", d(0), "07:00", true),
+    ex("Revisar casos de pediatria", "medicina", d(0)),
+    ex("Responder o grupo do internato", "mensagens", d(0)),
+    ex("Postar vlog no TikTok", "conteudo", d(0), "18:00"),
+    ex("Reagendar reunião", "geral", d(-1)),
+    ex("Prova de clínica médica", "medicina", d(3), "08:00"),
+    ex("Cinema com as amigas", "lazer", d(5), "20:00"),
+    ex("Comprar passagem da viagem", "viagem", null),
+    ex("Agendar exame de rotina", "geral", null),
+  ];
+}
+
+/* ================= Seleções ================= */
+const isLate = t => !t.done && t.date && t.date < todayIso();
+const byTime = (a, b) => (a.time || "99").localeCompare(b.time || "99") || a.created - b.created;
+const byDate = (a, b) => (a.date || "9999").localeCompare(b.date || "9999") || byTime(a, b);
+const doneRecent = list => list.filter(t => t.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0)).slice(0, 15);
+
+function dayTasks() {
+  const td = todayIso();
+  return state.tasks.filter(t => (!t.done && t.date && t.date <= td) || (t.done && t.doneOn === td));
+}
+function countFor(tab) {
+  const td = todayIso();
+  if (tab === "hoje") return { n: state.tasks.filter(t => !t.done && t.date && t.date <= td).length, late: state.tasks.some(isLate) };
+  if (tab === "algumdia") return { n: state.tasks.filter(t => !t.done && (!t.date || t.area === "geral")).length, late: false };
+  const list = state.tasks.filter(t => t.area === tab && !t.done);
+  return { n: list.length, late: list.some(isLate) };
+}
+
+/* ================= Render ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const TABS = [{ id: "hoje", nome: "Hoje" }, ...AREAS.filter(a => a.id !== "geral"), { id: "algumdia", nome: "Algum dia" }];
+
+function renderHeader() {
+  const now = new Date();
+  const h = now.getHours();
+  $("#greet").textContent = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+  $("#today-title").textContent = `${WD_LONG[now.getDay()]}, ${now.getDate()} de ${MONTHS[now.getMonth()]}`;
+
+  const list = dayTasks();
+  const done = list.filter(t => t.done).length;
+  const pct = list.length ? Math.round(done / list.length * 100) : 0;
+  $("#pfill").style.width = pct + "%";
+  $("#pbar").setAttribute("aria-valuenow", pct);
+  $("#ppct").textContent = pct + "%";
+  $("#ptext").textContent = !list.length ? "Nada para hoje ainda"
+    : done === list.length ? `Tudo feito! ${done} de ${list.length}`
+    : `${done} de ${list.length} feitas hoje`;
+}
+
+function renderTabs() {
+  $("#tabs").innerHTML = TABS.map(t => {
+    const c = countFor(t.id);
+    const dot = t.id === "hoje" ? "" : `<span class="dot" style="--c:${t.id === "algumdia" ? color("geral") : color(t.id)}"></span>`;
+    return `<button class="tab" role="tab" data-tab="${t.id}" aria-selected="${state.tab === t.id}">${dot}${t.nome}${c.n ? `<span class="count${c.late ? " late" : ""}">${c.n}</span>` : ""}</button>`;
+  }).join("");
+  const sel = $(`.tab[data-tab="${state.tab}"]`);
+  if (sel) sel.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+
+const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const ICON_NEXT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>`;
+
+function taskHtml(t, opts = {}) {
+  const late = isLate(t);
+  const when = whenLabel(t);
+  const meta = [];
+  if (opts.showArea !== false) meta.push(`<span class="tag"><span class="dot" style="--c:${color(t.area)}"></span>${AREA[t.area]?.nome || "Geral"}</span>`);
+  const shown = opts.hideToday && t.date === todayIso() ? (t.time || "") : when;
+  if (shown) meta.push(`<span class="when${late ? " late" : ""}">${late ? "Atrasada · " : ""}${esc(shown)}</span>`);
+  let move = "";
+  if (!t.done) {
+    if (!t.date) move = `<button class="move" data-act="today" aria-label="Fazer hoje">Hoje</button>`;
+    else move = `<button class="move" data-act="tomorrow" aria-label="Passar para amanhã">${ICON_NEXT}<span>Amanhã</span></button>`;
+  }
+  return `<div class="task${late ? " late" : ""}${t.done ? " is-done" : ""}" data-id="${t.id}" style="--c:${color(t.area)}">
+    <button class="check" data-act="toggle" aria-label="${t.done ? "Desmarcar" : "Marcar como feita"}: ${esc(t.title)}"><span>${ICON_CHECK}</span></button>
+    <button class="t-body" data-act="edit"><span class="t-title">${esc(t.title)}</span>${meta.length ? `<span class="t-meta">${meta.join("")}</span>` : ""}</button>
+    ${move}
+  </div>`;
+}
+function section(title, list, opts = {}) {
+  if (!list.length) return "";
+  return `<section class="section"><div class="section-title${opts.late ? " late" : ""}"><span>${title}</span>${opts.hint ? `<span class="hint">${opts.hint}</span>` : ""}</div>${list.map(t => taskHtml(t, opts)).join("")}</section>`;
+}
+function empty(title, text) { return `<div class="empty"><strong>${title}</strong>${text}</div>`; }
+
+function renderList() {
+  const td = todayIso();
+  const all = state.tasks;
+  let html = "";
+
+  if (!storageOk) html += `<div class="banner warn">Este navegador não está deixando salvar. Abra pelo app instalado ou baixe um backup nos ajustes.</div>`;
+  if (all.some(t => t.example)) html += `<div class="banner"><span>Estas tarefas são exemplos para você ver como funciona.</span><button class="link-btn" data-act="clear-examples">Apagar exemplos</button></div>`;
+
+  if (state.tab === "hoje") {
+    const late = all.filter(isLate).sort(byDate);
+    const today = all.filter(t => !t.done && t.date === td).sort(byTime);
+    const done = all.filter(t => t.done && t.doneOn === td).sort((a, b) => (a.doneAt || 0) - (b.doneAt || 0));
+    html += section("Ficou pra trás", late, { late: true, hint: "sem culpa, só reorganizar" });
+    html += section("Hoje", today, { hideToday: true });
+    if (!late.length && !today.length) html += done.length
+      ? empty("Dia concluído.", "Você fez tudo o que estava aqui. Pode descansar ou puxar algo de “Algum dia”.")
+      : empty("Nada para hoje.", "Anote algo no campo acima, tipo “estudar cardio hoje”.");
+    html += section("Feitas hoje", done, { hideToday: true });
+  } else if (state.tab === "algumdia") {
+    const someday = all.filter(t => !t.done && !t.date).sort((a, b) => a.created - b.created);
+    const geral = all.filter(t => !t.done && t.date && t.area === "geral").sort(byDate);
+    html += section("Algum dia", someday, { hint: "sem data, mas sem esquecer" });
+    html += section("Geral com data", geral, { showArea: false });
+    if (!someday.length && !geral.length) html += empty("Nada solto por aqui.", "Coisas sem data, como “agendar exame”, ficam guardadas nesta aba.");
+    html += section("Feitas", doneRecent(all.filter(t => !t.date || t.area === "geral")));
+  } else {
+    const mine = all.filter(t => t.area === state.tab);
+    const late = mine.filter(isLate).sort(byDate);
+    const today = mine.filter(t => !t.done && t.date === td).sort(byTime);
+    const next = mine.filter(t => !t.done && t.date && t.date > td).sort(byDate);
+    const none = mine.filter(t => !t.done && !t.date).sort((a, b) => a.created - b.created);
+    const o = { showArea: false };
+    html += section("Atrasadas", late, { ...o, late: true });
+    html += section("Hoje", today, { ...o, hideToday: true });
+    html += section("Próximos dias", next, o);
+    html += section("Sem data", none, o);
+    if (!late.length && !today.length && !next.length && !none.length) {
+      const nome = AREA[state.tab].nome;
+      html += empty(`Nada em ${nome}.`, `Escreva algo com #${fold(nome)} no fim para cair direto aqui.`);
+    }
+    html += section("Feitas", doneRecent(mine), o);
+  }
+  $("#list").innerHTML = html;
+}
+
+function render() { renderHeader(); renderTabs(); renderList(); }
+
+/* ================= Prévia ao digitar ================= */
+function renderPreview() {
+  const v = $("#add-input").value.trim();
+  const el = $("#preview");
+  if (!v) { el.innerHTML = `<span>Escreva do seu jeito. Eu descubro a área e o dia.</span>`; return; }
+  const p = parse(v);
+  const when = p.date ? whenLabel(p) : (p.time ? p.time : "Algum dia");
+  el.innerHTML = `<span>Vai para</span><span class="chip"><span class="dot" style="--c:${color(p.area)}"></span>${AREA[p.area].nome}</span><span class="chip">${esc(when)}</span>${p.sure ? "" : `<span>· dá pra mudar depois</span>`}`;
+}
+
+/* ================= Ações ================= */
+const find = id => state.tasks.find(t => t.id === id);
+const PRAISE = ["Boa! Mais uma.", "Feito. Respira e segue.", "Uma a menos na cabeça.", "Isso aí!", "Andando bem.", "Ticou, brilhou.", "Pequeno passo, conta muito."];
+const praise = () => PRAISE[Math.floor(Math.random() * PRAISE.length)];
+
+function addFromInput() {
+  const input = $("#add-input");
+  const v = input.value.trim();
+  if (!v) { input.focus(); return; }
+  const p = parse(v);
+  snapshot();
+  state.tasks.push({ id: uid(), title: p.title, area: p.area, date: p.date, time: p.time, done: false, doneOn: null, created: Date.now() });
+  input.value = "";
+  renderPreview();
+  save(); render();
+  toast(`Anotado em ${AREA[p.area].nome} · ${p.date ? whenLabel(p) : "Algum dia"}`, true);
+}
+
+function toggle(id, el) {
+  const t = find(id); if (!t) return;
+  snapshot();
+  t.done = !t.done;
+  t.doneOn = t.done ? todayIso() : null;
+  t.doneAt = t.done ? Date.now() : null;
+  save();
+  if (t.done) {
+    const box = el.querySelector(".check span").getBoundingClientRect();
+    burst(box.left + box.width / 2, box.top + box.height / 2, getComputedStyle(el).getPropertyValue("--c"));
+    try { navigator.vibrate && navigator.vibrate(18); } catch (e) {}
+    el.classList.add("is-done");
+    renderHeader(); renderTabs();
+    $("#pfill").classList.remove("shine"); void $("#pfill").offsetWidth; $("#pfill").classList.add("shine");
+    const day = dayTasks();
+    const all = day.length && day.every(x => x.done);
+    setTimeout(() => { el.classList.add("leaving"); }, 380);
+    setTimeout(() => { renderList(); }, 650);
+    if (all) { setTimeout(() => bigBurst(), 300); toast("Dia completo! Você conseguiu.", true); }
+    else toast(praise(), true);
+  } else {
+    render();
+  }
+}
+
+function move(id, where) {
+  const t = find(id); if (!t) return;
+  snapshot();
+  t.date = where === "today" ? todayIso() : tomorrowIso();
+  save(); render();
+  toast(where === "today" ? "Puxada para hoje" : "Passada para amanhã", true);
+}
+
+/* ================= Toast ================= */
+let toastTimer;
+function toast(text, canUndo) {
+  $("#toast-text").textContent = text;
+  $("#toast-btn").hidden = !canUndo;
+  $("#toast").classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 3200);
+}
+$("#toast-btn").addEventListener("click", () => { $("#toast").classList.remove("show"); undo(); });
+
+/* ================= Editar ================= */
+const dlg = $("#edit-dlg");
+let editing = null, eArea = "geral", delArmed = false;
+
+$("#e-areas").innerHTML = AREAS.map(a => `<button type="button" data-area="${a.id}" style="--c:${color(a.id)}"><span class="dot"></span>${a.nome}</button>`).join("");
+function paintAreas() { document.querySelectorAll("#e-areas button").forEach(b => b.setAttribute("aria-pressed", b.dataset.area === eArea)); }
+function paintQuick() {
+  const v = $("#e-date").value;
+  document.querySelectorAll("#e-quick button").forEach(b => {
+    const on = (b.dataset.q === "today" && v === todayIso()) || (b.dataset.q === "tomorrow" && v === tomorrowIso()) || (b.dataset.q === "none" && !v);
+    b.setAttribute("aria-pressed", on);
+  });
+}
+function openEdit(id) {
+  const t = find(id); if (!t) return;
+  editing = id; eArea = t.area; delArmed = false;
+  $("#e-title").value = t.title;
+  $("#e-date").value = t.date || "";
+  $("#e-time").value = t.time || "";
+  $("#e-delete").textContent = "Apagar"; $("#e-delete").classList.remove("armed");
+  paintAreas(); paintQuick();
+  dlg.showModal();
+}
+$("#e-areas").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; eArea = b.dataset.area; paintAreas(); });
+$("#e-quick").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  $("#e-date").value = b.dataset.q === "today" ? todayIso() : b.dataset.q === "tomorrow" ? tomorrowIso() : "";
+  paintQuick();
+});
+$("#e-date").addEventListener("input", paintQuick);
+$("#e-cancel").addEventListener("click", () => dlg.close());
+$("#e-delete").addEventListener("click", () => {
+  if (!delArmed) { delArmed = true; $("#e-delete").textContent = "Toque de novo para apagar"; $("#e-delete").classList.add("armed"); return; }
+  snapshot();
+  state.tasks = state.tasks.filter(t => t.id !== editing);
+  save(); dlg.close(); render(); toast("Tarefa apagada", true);
+});
+$("#edit-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const t = find(editing); if (!t) { dlg.close(); return; }
+  const title = $("#e-title").value.trim();
+  if (!title) { $("#e-title").focus(); return; }
+  snapshot();
+  t.title = title; t.area = eArea;
+  t.date = $("#e-date").value || null;
+  t.time = $("#e-time").value || null;
+  delete t.example;
+  save(); dlg.close(); render(); toast("Salvo", true);
+});
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+
+/* ================= Ajustes ================= */
+const sdlg = $("#set-dlg");
+$("#open-settings").addEventListener("click", () => {
+  $("#s-clear-ex").hidden = !state.tasks.some(t => t.example);
+  sdlg.showModal();
+});
+$("#s-close").addEventListener("click", () => sdlg.close());
+sdlg.addEventListener("click", e => { if (e.target === sdlg) sdlg.close(); });
+
+$("#s-export").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify({ app: "cabe-no-dia", v: 1, exportedAt: new Date().toISOString(), tasks: state.tasks }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `cabe-no-dia-backup-${todayIso()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast("Backup baixado");
+});
+$("#s-import").addEventListener("click", () => $("#s-file").click());
+$("#s-file").addEventListener("change", e => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      const list = Array.isArray(data) ? data : data.tasks;
+      if (!Array.isArray(list)) throw new Error("formato");
+      snapshot();
+      const ids = new Set(state.tasks.map(t => t.id));
+      let added = 0;
+      list.forEach(t => { if (t && t.id && t.title && !ids.has(t.id)) { state.tasks.push(t); added++; } });
+      save(); render(); sdlg.close();
+      toast(`${added} tarefa${added === 1 ? "" : "s"} restaurada${added === 1 ? "" : "s"}`, true);
+    } catch (err) { toast("Esse arquivo não é um backup do Cabe no Dia"); }
+    e.target.value = "";
+  };
+  r.readAsText(file);
+});
+$("#s-clear-done").addEventListener("click", () => {
+  snapshot();
+  const before = state.tasks.length;
+  state.tasks = state.tasks.filter(t => !t.done);
+  save(); render(); sdlg.close();
+  toast(`${before - state.tasks.length} feitas removidas`, true);
+});
+function clearExamples() {
+  snapshot();
+  state.tasks = state.tasks.filter(t => !t.example);
+  save(); render(); toast("Exemplos apagados. Agora é com você!", true);
+}
+$("#s-clear-ex").addEventListener("click", () => { sdlg.close(); clearExamples(); });
+
+// Instalação
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("#s-install").hidden = false; });
+$("#s-install").addEventListener("click", async () => {
+  if (!installEvt) return;
+  installEvt.prompt();
+  await installEvt.userChoice.catch(() => {});
+  installEvt = null; $("#s-install").hidden = true;
+});
+const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !standalone) $("#s-ios").hidden = false;
+
+/* ================= Eventos da lista ================= */
+$("#add-form").addEventListener("submit", e => { e.preventDefault(); addFromInput(); });
+$("#add-input").addEventListener("input", renderPreview);
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  state.tab = b.dataset.tab; save(); renderTabs(); renderList();
+  window.scrollTo({ top: Math.min(window.scrollY, $(".sticky").offsetTop), behavior: "smooth" });
+});
+$("#list").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  if (b.dataset.act === "clear-examples") return clearExamples();
+  const el = b.closest(".task"); if (!el) return;
+  const id = el.dataset.id;
+  if (b.dataset.act === "toggle") toggle(id, el);
+  else if (b.dataset.act === "edit") openEdit(id);
+  else if (b.dataset.act === "tomorrow") move(id, "tomorrow");
+  else if (b.dataset.act === "today") move(id, "today");
+});
+
+/* ================= Brilhinho ================= */
+const cv = $("#fx"), cx = cv.getContext("2d");
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+let parts = [], raf = 0;
+function sizeCanvas() { const r = window.devicePixelRatio || 1; cv.width = innerWidth * r; cv.height = innerHeight * r; cx.setTransform(r, 0, 0, r, 0, 0); }
+sizeCanvas(); addEventListener("resize", sizeCanvas);
+function resolveColor(c) {
+  c = (c || "").trim();
+  const m = c.match(/var\((--[^)]+)\)/);
+  if (m) return getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim() || "#1E9E5E";
+  return c || "#1E9E5E";
+}
+function burst(x, y, areaColor, n = 22, power = 1) {
+  if (reduce.matches) return;
+  const cols = [resolveColor("var(--done)"), resolveColor(areaColor), "#FFD43B", "#FFFFFF"];
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = (2 + Math.random() * 4.5) * power;
+    parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 2.2 * power, life: 1, size: 3 + Math.random() * 4, c: cols[i % cols.length], star: Math.random() < .45, rot: Math.random() * 6 });
+  }
+  if (!raf) raf = requestAnimationFrame(tick);
+}
+function bigBurst() {
+  for (let i = 0; i < 5; i++) setTimeout(() => burst(innerWidth * (.15 + .7 * Math.random()), innerHeight * (.2 + .3 * Math.random()), "var(--brand)", 30, 1.3), i * 160);
+}
+function star(x, y, r, rot) {
+  cx.beginPath();
+  for (let i = 0; i < 8; i++) { const rr = i % 2 ? r * .42 : r; const a = rot + i * Math.PI / 4; cx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+  cx.closePath(); cx.fill();
+}
+function tick() {
+  cx.clearRect(0, 0, innerWidth, innerHeight);
+  parts = parts.filter(p => p.life > 0);
+  for (const p of parts) {
+    p.x += p.vx; p.y += p.vy; p.vy += .18; p.vx *= .98; p.life -= .022; p.rot += .15;
+    cx.globalAlpha = Math.max(0, p.life);
+    cx.fillStyle = p.c;
+    if (p.star) star(p.x, p.y, p.size * 1.4, p.rot);
+    else { cx.beginPath(); cx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2); cx.fill(); }
+  }
+  cx.globalAlpha = 1;
+  if (parts.length) raf = requestAnimationFrame(tick); else { raf = 0; cx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+
+/* ================= Início ================= */
+if (!load()) { seed(); save(); }
+render();
+
+// Virou o dia com o app aberto? Atualiza.
+let lastDay = todayIso();
+const refreshDay = () => { if (todayIso() !== lastDay) { lastDay = todayIso(); render(); } else renderHeader(); };
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshDay(); });
+setInterval(refreshDay, 60000);
+
+// Pede ao navegador para não apagar os dados sozinho.
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+
+// Funciona offline.
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+
+// Exposto para testes no console.
+window.__cabe = { parse };
+})();
+</script>
+</body>
+</html>
