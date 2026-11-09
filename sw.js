@@ -1,5 +1,5 @@
 // Cabe no Dia — service worker: abre offline e atualiza sozinho quando há internet.
-const CACHE = "cabe-no-dia-v2";
+const CACHE = "cabe-no-dia-v3";
 const SHELL = [
   "./",
   "./index.html",

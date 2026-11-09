@@ -16,4 +16,11 @@
 // Esses dados não são senha: podem ficar públicos no GitHub. Quem protege as
 // agendas são as regras do arquivo firestore.rules.
 
-export const firebaseConfig = null;
+export const firebaseConfig = {
+  apiKey: "AIzaSyDPOriv03uQP7r6VsKVbN5fEGU1A64I5Sc",
+  authDomain: "cabe-no-dia.firebaseapp.com",
+  projectId: "cabe-no-dia",
+  storageBucket: "cabe-no-dia.firebasestorage.app",
+  messagingSenderId: "261161815144",
+  appId: "1:261161815144:web:17ff884702e91ba7737fdd"
+};
