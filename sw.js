@@ -1,8 +1,11 @@
 // Cabe no Dia — service worker: abre offline e atualiza sozinho quando há internet.
-const CACHE = "cabe-no-dia-v1";
+const CACHE = "cabe-no-dia-v2";
 const SHELL = [
   "./",
   "./index.html",
+  "./styles.css",
+  "./app.js",
+  "./firebase-config.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -48,8 +51,12 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // Demais arquivos do app: cache primeiro.
+  // Arquivos do app: versão nova quando há internet, guardada quando não há.
   if (url.origin === self.location.origin) {
-    e.respondWith(caches.match(req).then(hit => hit || fetch(req)));
+    e.respondWith(
+      fetch(req)
+        .then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
+        .catch(() => caches.match(req))
+    );
   }
 });

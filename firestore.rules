@@ -1,0 +1,59 @@
+rules_version = '2';
+
+// Regras do Cabe no Dia. Cole este arquivo inteiro em
+// Firebase Console → Firestore Database → Regras → Publicar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function myEmail() { return request.auth.token.email.lower(); }
+
+    // Perfil de cada pessoa: só ela lê e escreve.
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /agendas/{agendaId} {
+      function isMember() { return request.auth.uid in resource.data.members; }
+      function isOwner() { return request.auth.uid == resource.data.ownerUid; }
+      function isInvited() { return myEmail() in resource.data.invited; }
+      function changed() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+      // Lê quem é membro ou quem foi convidado (para ver o convite).
+      allow read: if signedIn() && (isMember() || isInvited());
+
+      // Cria só a própria agenda, sendo o único membro.
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.members == [request.auth.uid];
+
+      allow update: if signedIn()
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && (
+          // A dona muda tudo: nome, convites, membros, categorias.
+          isOwner()
+          // Membros editam as categorias.
+          || (isMember() && changed().hasOnly(['cats']))
+          // Membro saindo da agenda.
+          || (isMember() && changed().hasOnly(['members', 'memberInfo'])
+              && request.resource.data.members == resource.data.members.removeAll([request.auth.uid]))
+          // Convidado aceitando o convite.
+          || (isInvited() && changed().hasOnly(['members', 'invited', 'memberInfo'])
+              && request.resource.data.members == resource.data.members.concat([request.auth.uid])
+              && request.resource.data.invited == resource.data.invited.removeAll([myEmail()])
+              && request.resource.data.memberInfo.diff(resource.data.memberInfo).affectedKeys().hasOnly([request.auth.uid]))
+          // Convidado recusando o convite.
+          || (isInvited() && changed().hasOnly(['invited'])
+              && request.resource.data.invited == resource.data.invited.removeAll([myEmail()]))
+        );
+
+      allow delete: if signedIn() && isOwner();
+
+      // Tarefas: qualquer membro da agenda lê e escreve.
+      match /tasks/{taskId} {
+        allow read, write: if signedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/agendas/$(agendaId)).data.members;
+      }
+    }
+  }
+}
