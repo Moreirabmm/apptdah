@@ -2,7 +2,7 @@
 
 Agenda pensada para quem tem TDAH e uma rotina espalhada em vários lugares. Abre direto no que importa hoje, funciona sem internet, pode ser instalada no celular ao lado do WhatsApp e permite compartilhar a agenda com outras pessoas.
 
-**Endereço do app:** https://moreirabmm.github.io/apptdah/ (depois de ativar o GitHub Pages, passo 1 abaixo)
+**Endereço do app:** https://apptdaga.vercel.app/ (Vercel) e https://moreirabmm.github.io/apptdah/ (GitHub Pages). O Vercel atualiza sozinho a cada envio para o GitHub.
 
 ## O que ele faz
 
@@ -38,8 +38,9 @@ Leva uns 10 minutos e só precisa ser feito uma vez.
 
 1. No menu da esquerda: **Criação → Authentication → Vamos começar**.
 2. Na aba **Método de login**, escolha **Google**, ative, escolha seu e-mail de suporte e salve.
-3. Ainda em Authentication, abra **Configurações → Domínios autorizados → Adicionar domínio** e coloque:
-   `moreirabmm.github.io`
+3. Ainda em Authentication, abra **Configurações → Domínios autorizados → Adicionar domínio** e coloque cada endereço onde o app roda:
+   `moreirabmm.github.io` e `apptdaga.vercel.app`. Se publicar em outro endereço, adicione ele aqui também, senão o login mostra "Este endereço não está liberado no Firebase".
+4. Em **Criação → Hosting**, clique em **Vamos começar** e avance até o fim. Não precisa publicar nada: isso só cria a página que o login do Google usa para voltar ao app.
 
 ### 2.3 Criar o banco de dados
 
